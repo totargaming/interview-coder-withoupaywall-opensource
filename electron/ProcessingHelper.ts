@@ -26,11 +26,10 @@ interface GeminiResponse {
     content: {
       parts: Array<{
         text: string;
-      }>;
+      }>; 
     };
     finishReason: string;
-  }>;
-}
+  }>;}
 interface AnthropicMessage {
   role: 'user' | 'assistant';
   content: Array<{
@@ -41,8 +40,7 @@ interface AnthropicMessage {
       media_type: string;
       data: string;
     };
-  }>;
-}
+  }>;}
 export class ProcessingHelper {
   private deps: IProcessingHelperDeps
   private screenshotHelper: ScreenshotHelper
@@ -141,7 +139,7 @@ export class ProcessingHelper {
       )
       if (isInitialized) return
       await new Promise((resolve) => setTimeout(resolve, 100))
-      attempts++
+      attempts++ 
     }
     throw new Error("App failed to initialize after 5 seconds")
   }
@@ -473,18 +471,18 @@ export class ProcessingHelper {
           }
         }
 
-        // Use OpenAI for processing
+        // Use OpenAI for processing        
         const messages = [
           {
             role: "system" as const, 
-            content: "You are a coding challenge interpreter. Analyze the screenshot of the coding problem and extract all relevant information. Return the information in JSON format with these fields: problem_statement, constraints, example_input, example_output. Just return the structured JSON without any other text."
+            content: "You are an expert full-stack interview coach specializing in practical React and Express challenges in a VS Code/StackBlitz environment. Analyze the screenshot of the StackBlitz IDE interface showing the interview task. Extract relevant information about project structure, files, components, and required functionality. Look for instruction files, READMEs, code files, and UI mockups. Return the information in JSON format with these fields: problem_statement (overall task), project_structure (key files and folders visible), technical_context (frameworks, libraries, tech stack), requirements (specific features to implement), api_endpoints (if visible in the code), ui_components (React components needed), constraints (time limits, restrictions), starter_code (summary of provided code). Just return the structured JSON without any other text."
           },
           {
             role: "user" as const,
             content: [
               {
                 type: "text" as const, 
-                text: `Extract the coding problem details from these screenshots. Return in JSON format. Preferred coding language we gonna use for this problem is ${language}.`
+                text: `Extract the practical full-stack interview challenge details from these StackBlitz/VS Code screenshots. This is for a practical implementation challenge using React + Express. Identify file structure, components needed, API endpoints, and requirements. Return in JSON format. I'll be implementing this in ${language} with StackBlitz.`
               },
               ...imageDataList.map(data => ({
                 type: "image_url" as const,
@@ -529,8 +527,7 @@ export class ProcessingHelper {
           const geminiMessages: GeminiMessage[] = [
             {
               role: "user",
-              parts: [                {
-                  text: `You are a web development interview assistant. Analyze the screenshots of the React/Express interview question and extract all relevant information. Return the information in JSON format with these fields: problem_statement, technical_context, requirements, example_implementation (if available). Just return the structured JSON without any other text. Preferred framework/technology we'll use for this problem is ${language}.`
+              parts: [                {                  text: `You are an expert full-stack interview coach specializing in practical React and Express challenges in a VS Code/StackBlitz environment. Analyze the screenshot of the StackBlitz IDE interface showing the interview task. Extract relevant information about project structure, files, components, and required functionality. Look for instruction files, READMEs, code files, and UI mockups. Return the information in JSON format with these fields: problem_statement (overall task), project_structure (key files and folders visible), technical_context (frameworks, libraries, tech stack), requirements (specific features to implement), api_endpoints (if visible in the code), ui_components (React components needed), constraints (time limits, restrictions), starter_code (summary of provided code). Just return the structured JSON without any other text. I'll be implementing this in ${language} with StackBlitz.`
                 },
                 ...imageDataList.map(data => ({
                   inlineData: {
@@ -587,8 +584,7 @@ export class ProcessingHelper {
               role: "user" as const,
               content: [
                 {
-                  type: "text" as const,
-                  text: `Extract the coding problem details from these screenshots. Return in JSON format with these fields: problem_statement, constraints, example_input, example_output. Preferred coding language is ${language}.`
+                  type: "text" as const,                  text: `You are an expert full-stack interview coach specializing in practical React and Express challenges in StackBlitz. Analyze the screenshots of the VS Code/StackBlitz IDE interface. Extract relevant information about project structure, files, components, and required functionality. Look for instruction files, READMEs, code files, and UI mockups. Return the information in JSON format with these fields: problem_statement (overall task), project_structure (key files and folders visible), technical_context (frameworks, libraries, tech stack), requirements (specific features to implement), api_endpoints (if visible in the code), ui_components (React components needed), constraints (time limits, restrictions), starter_code (summary of provided code). Just return the structured JSON without any other text. I'll be implementing this in ${language}.`
                 },
                 ...imageDataList.map(data => ({
                   type: "image" as const,
@@ -722,9 +718,7 @@ export class ProcessingHelper {
 
       if (!problemInfo) {
         throw new Error("No problem info available");
-      }
-
-      // Update progress status
+      }      // Update progress status
       if (mainWindow) {
         mainWindow.webContents.send("processing-status", {
           message: "Creating optimal solution with detailed explanations...",
@@ -734,32 +728,49 @@ export class ProcessingHelper {
 
       // Create prompt for solution generation
       const promptText = `
-Generate a detailed solution for the following coding problem:
+Generate an implementation plan and code for this practical React+Express full-stack interview challenge in StackBlitz:
 
 PROBLEM STATEMENT:
 ${problemInfo.problem_statement}
 
+PROJECT STRUCTURE:
+${problemInfo.project_structure || "Typical React+Express structure with frontend and backend folders"}
+
+TECHNICAL CONTEXT:
+${problemInfo.technical_context || "React and Express full-stack application"}
+
+REQUIREMENTS:
+${problemInfo.requirements || "Implementation of required functionality"}
+
+API ENDPOINTS NEEDED:
+${problemInfo.api_endpoints || "To be determined based on requirements"}
+
+UI COMPONENTS NEEDED:
+${problemInfo.ui_components || "To be determined based on requirements"}
+
+STARTER CODE SUMMARY:
+${problemInfo.starter_code || "Basic React+Express template"}
+
 CONSTRAINTS:
-${problemInfo.constraints || "No specific constraints provided."}
-
-EXAMPLE INPUT:
-${problemInfo.example_input || "No example input provided."}
-
-EXAMPLE OUTPUT:
-${problemInfo.example_output || "No example output provided."}
+${problemInfo.constraints || "Time-limited interview setting in StackBlitz"}
 
 LANGUAGE: ${language}
+ENVIRONMENT: StackBlitz online IDE (VS Code-based)
 
-I need the response in the following format:
-1. Code: A clean, well-structured implementation in ${language} with proper organization and best practices
-2. Your Thoughts: A list of key insights and reasoning behind your approach
-3. Best Practices: Important web development practices relevant to this solution
-4. Common Interview Questions: Questions an interviewer might ask about this implementation
+I need a practical, implementable solution for a 40-minute pair programming interview. Provide:
 
-For React components, include proper hooks usage, state management, and component structure. For Express, include proper route organization, middleware usage, and error handling.
+1. IMPLEMENTATION PLAN: Step-by-step approach to building the required components and features
+2. FILE STRUCTURE: Recommended file organization (if not already specified)
+3. CODE IMPLEMENTATION: 
+   - Frontend React components with proper hooks, state management and API calls
+   - Backend Express routes, controllers, and middleware
+   - Any necessary model definitions or database interactions
+4. TESTING STRATEGY: How to validate the implementation works correctly
+5. TALKING POINTS: 4-5 technical concepts to highlight during the interview (architecture decisions, patterns used, etc.)
+6. STACKBLITZ-SPECIFIC TIPS: Any environment configuration needed for this specific challenge
 
-Your solution should be efficient, well-commented, and handle edge cases.
-`;
+Focus on clean architecture, best practices for React and Express, and clear documentation.
+Include comments explaining your implementation decisions that would impress an interviewer.`;
 
       let responseContent;
       
@@ -1019,36 +1030,49 @@ Your solution should be efficient, well-commented, and handle edge cases.
         const messages = [
           {
             role: "system" as const, 
-            content: `You are a coding interview assistant helping debug and improve solutions. Analyze these screenshots which include either error messages, incorrect outputs, or test cases, and provide detailed debugging help.
+            content: `You are a React+Express interview coach helping candidates debug and improve solutions during live coding practical challenges in StackBlitz. Analyze these screenshots of the VS Code/StackBlitz IDE which may include error messages, code snippets, console output, terminal logs, or UI rendering issues.
 
 Your response MUST follow this exact structure with these section headers (use ### for headers):
 ### Issues Identified
 - List each issue as a bullet point with clear explanation
+- Group related issues together (React component issues, Express route issues, build errors, etc.)
+- Identify which file(s) contain the issues based on the visible project structure
 
-### Specific Improvements and Corrections
-- List specific code changes needed as bullet points
+### File-by-File Fixes
+- For each affected file, provide the file path and specific changes needed
+- Include line numbers whenever possible
+- Provide complete code snippets for complex fixes using proper syntax highlighting
 
-### Optimizations
-- List any performance optimizations if applicable
+### Configuration & Environment Issues
+- Address any StackBlitz-specific configuration problems (package.json, tsconfig, etc.)
+- Mention any missing dependencies or incorrect imports
+- Identify environment variables or setup issues
 
-### Explanation of Changes Needed
-Here provide a clear explanation of why the changes are needed
+### Testing & Validation
+- Suggest ways to verify the fix works correctly
+- Include any console commands to run or test the application
 
-### Key Points
-- Summary bullet points of the most important takeaways
+### Implementation Improvements
+- Suggest architectural or pattern improvements relevant to the specific challenge
+- Note React best practices (hooks usage, state management, render optimization)
+- Address Express best practices (middleware usage, error handling, API organization)
 
-If you include code examples, use proper markdown code blocks with language specification (e.g. \`\`\`java).`
+### Expert Interview Talking Points
+- Provide 3-5 talking points specific to the issues resolved that demonstrate expertise
+- Include framework-specific insights that would impress an interviewer
+
+If you include code examples, use proper markdown code blocks with language specification (e.g. \`\`\`tsx, \`\`\`jsx, \`\`\`javascript).`
           },
           {
             role: "user" as const,
             content: [
               {
                 type: "text" as const, 
-                text: `I'm solving this coding problem: "${problemInfo.problem_statement}" in ${language}. I need help with debugging or improving my solution. Here are screenshots of my code, the errors or test cases. Please provide a detailed analysis with:
-1. What issues you found in my code
-2. Specific improvements and corrections
-3. Any optimizations that would make the solution better
-4. A clear explanation of the changes needed` 
+                text: `I'm in a StackBlitz live coding interview implementing: "${problemInfo.problem_statement}" in ${language}. I need urgent help with my React/Express implementation. Here are screenshots of my code, any errors, or UI. Please provide specific fixes I can implement quickly to:
+1. Fix any bugs or errors
+2. Improve my implementation based on best practices
+3. Suggest optimizations that will impress the interviewer
+4. Identify key talking points I should mention` 
               },
               ...imageDataList.map(data => ({
                 type: "image_url" as const,
