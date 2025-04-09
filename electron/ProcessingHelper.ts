@@ -529,9 +529,8 @@ export class ProcessingHelper {
           const geminiMessages: GeminiMessage[] = [
             {
               role: "user",
-              parts: [
-                {
-                  text: `You are a coding challenge interpreter. Analyze the screenshots of the coding problem and extract all relevant information. Return the information in JSON format with these fields: problem_statement, constraints, example_input, example_output. Just return the structured JSON without any other text. Preferred coding language we gonna use for this problem is ${language}.`
+              parts: [                {
+                  text: `You are a web development interview assistant. Analyze the screenshots of the React/Express interview question and extract all relevant information. Return the information in JSON format with these fields: problem_statement, technical_context, requirements, example_implementation (if available). Just return the structured JSON without any other text. Preferred framework/technology we'll use for this problem is ${language}.`
                 },
                 ...imageDataList.map(data => ({
                   inlineData: {
@@ -752,12 +751,12 @@ ${problemInfo.example_output || "No example output provided."}
 LANGUAGE: ${language}
 
 I need the response in the following format:
-1. Code: A clean, optimized implementation in ${language}
+1. Code: A clean, well-structured implementation in ${language} with proper organization and best practices
 2. Your Thoughts: A list of key insights and reasoning behind your approach
-3. Time complexity: O(X) with a detailed explanation (at least 2 sentences)
-4. Space complexity: O(X) with a detailed explanation (at least 2 sentences)
+3. Best Practices: Important web development practices relevant to this solution
+4. Common Interview Questions: Questions an interviewer might ask about this implementation
 
-For complexity explanations, please be thorough. For example: "Time complexity: O(n) because we iterate through the array only once. This is optimal as we need to examine each element at least once to find the solution." or "Space complexity: O(n) because in the worst case, we store all elements in the hashmap. The additional space scales linearly with the input size."
+For React components, include proper hooks usage, state management, and component structure. For Express, include proper route organization, middleware usage, and error handling.
 
 Your solution should be efficient, well-commented, and handle edge cases.
 `;
