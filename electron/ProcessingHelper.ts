@@ -471,20 +471,18 @@ export class ProcessingHelper {
               error: "OpenAI API key not configured or invalid. Please check your settings."
             };
           }
-        }
-
-        // Use OpenAI for processing
+        }        // Use OpenAI for processing
         const messages = [
           {
             role: "system" as const, 
-            content: "You are a coding challenge interpreter. Analyze the screenshot of the coding problem and extract all relevant information. Return the information in JSON format with these fields: problem_statement, constraints, example_input, example_output. Just return the structured JSON without any other text."
+            content: "You are a coding challenge interpreter. Analyze the screenshot of the coding problem and extract ALL relevant information. Pay careful attention to the entire image and capture problem statements, constraints, examples, current code implementations, test cases, and any test results shown. Return the information in JSON format with these fields: problem_statement, constraints, example_input, example_output, current_code, test_cases, test_results, difficulty, hints, function_signature. Include any visible code snippets in full. Just return the structured JSON without any other text."
           },
           {
             role: "user" as const,
             content: [
               {
                 type: "text" as const, 
-                text: `Extract the coding problem details from these screenshots. Return in JSON format. Preferred coding language we gonna use for this problem is ${language}.`
+                text: `Extract ALL details from these LeetCode-style problem screenshots. Be thorough and include any visible code, tests, and results. If problem is partially solved, capture both the problem statement and the current implementation. Return in complete JSON format. Preferred coding language we gonna use for this problem is ${language}.`
               },
               ...imageDataList.map(data => ({
                 type: "image_url" as const,
@@ -529,9 +527,8 @@ export class ProcessingHelper {
           const geminiMessages: GeminiMessage[] = [
             {
               role: "user",
-              parts: [
-                {
-                  text: `You are a coding challenge interpreter. Analyze the screenshots of the coding problem and extract all relevant information. Return the information in JSON format with these fields: problem_statement, constraints, example_input, example_output. Just return the structured JSON without any other text. Preferred coding language we gonna use for this problem is ${language}.`
+              parts: [                {
+                  text: `You are a coding challenge interpreter. Analyze the screenshots of the coding problem and extract ALL relevant information. Pay careful attention to the entire image and capture problem statements, constraints, examples, current code implementations, test cases, and any test results shown. Return the information in JSON format with these fields: problem_statement, constraints, example_input, example_output, current_code, test_cases, test_results, difficulty, hints, function_signature. Include any visible code snippets in full. Just return the structured JSON without any other text. Preferred coding language we gonna use for this problem is ${language}.`
                 },
                 ...imageDataList.map(data => ({
                   inlineData: {
@@ -589,7 +586,7 @@ export class ProcessingHelper {
               content: [
                 {
                   type: "text" as const,
-                  text: `Extract the coding problem details from these screenshots. Return in JSON format with these fields: problem_statement, constraints, example_input, example_output. Preferred coding language is ${language}.`
+                  text: `You are a coding challenge interpreter. Analyze the screenshots of the coding problem and extract ALL relevant information. Pay careful attention to the entire image and capture problem statements, constraints, examples, current code implementations, test cases, and any test results shown. Return the information in JSON format with these fields: problem_statement, constraints, example_input, example_output, current_code, test_cases, test_results, difficulty, hints, function_signature. Include any visible code snippets in full. Just return the structured JSON without any other text. Preferred coding language is ${language}.`
                 },
                 ...imageDataList.map(data => ({
                   type: "image" as const,
@@ -731,11 +728,9 @@ export class ProcessingHelper {
           message: "Creating optimal solution with detailed explanations...",
           progress: 60
         });
-      }
-
-      // Create prompt for solution generation
+      }      // Create prompt for solution generation
       const promptText = `
-Generate a detailed solution for the following coding problem:
+Generate a detailed, THOROUGHLY TESTED solution for the following coding problem:
 
 PROBLEM STATEMENT:
 ${problemInfo.problem_statement}
@@ -749,17 +744,38 @@ ${problemInfo.example_input || "No example input provided."}
 EXAMPLE OUTPUT:
 ${problemInfo.example_output || "No example output provided."}
 
+${problemInfo.current_code ? `CURRENT CODE IMPLEMENTATION:
+${problemInfo.current_code}` : ''}
+
+${problemInfo.test_cases ? `TEST CASES:
+${problemInfo.test_cases}` : ''}
+
+${problemInfo.test_results ? `TEST RESULTS:
+${problemInfo.test_results}` : ''}
+
+${problemInfo.function_signature ? `FUNCTION SIGNATURE:
+${problemInfo.function_signature}` : ''}
+
 LANGUAGE: ${language}
 
 I need the response in the following format:
-1. Code: A clean, optimized implementation in ${language}
-2. Your Thoughts: A list of key insights and reasoning behind your approach
-3. Time complexity: O(X) with a detailed explanation (at least 2 sentences)
-4. Space complexity: O(X) with a detailed explanation (at least 2 sentences)
+1. Code: A clean, optimized, and CORRECT implementation in ${language} that passes ALL test cases. Focus on correctness first, then optimization.
+2. Verification: Show how your solution works with MULTIPLE test cases, including the provided examples and edge cases.
+3. Your Thoughts: A list of key insights and reasoning behind your approach.
+4. Time complexity: O(X) with a detailed explanation (at least 2 sentences).
+5. Space complexity: O(X) with a detailed explanation (at least 2 sentences).
 
-For complexity explanations, please be thorough. For example: "Time complexity: O(n) because we iterate through the array only once. This is optimal as we need to examine each element at least once to find the solution." or "Space complexity: O(n) because in the worst case, we store all elements in the hashmap. The additional space scales linearly with the input size."
+For the code implementation:
+- Include detailed comments explaining each significant step
+- Handle ALL edge cases explicitly (empty inputs, negative numbers, overflows, etc.)
+- Ensure the function signature matches exactly what the problem requires
+- Don't skip ANY steps in the solution - provide complete, runnable code
 
-Your solution should be efficient, well-commented, and handle edge cases.
+For verification:
+- Trace through the execution of your algorithm step-by-step with at least one example
+- Validate against all provided test cases and add your own test cases for edge conditions
+
+Your solution should be efficient, well-commented, and handle ALL edge cases.
 `;
 
       let responseContent;
@@ -794,14 +810,15 @@ Your solution should be efficient, well-commented, and handle edge cases.
           };
         }
         
-        try {
-          // Create Gemini message structure
+        try {          // Create Gemini message structure
           const geminiMessages = [
             {
               role: "user",
               parts: [
                 {
-                  text: `You are an expert coding interview assistant. Provide a clear, optimal solution with detailed explanations for this problem:\n\n${promptText}`
+                  text: `You are an expert coding interview assistant specializing in algorithm optimization and correctness. Your goal is to provide solutions that are not just efficient but THOROUGHLY TESTED and verified to work against all test cases.
+
+${promptText}`
                 }
               ]
             }
@@ -843,14 +860,15 @@ Your solution should be efficient, well-commented, and handle edge cases.
           };
         }
         
-        try {
-          const messages = [
+        try {          const messages = [
             {
               role: "user" as const,
               content: [
                 {
                   type: "text" as const,
-                  text: `You are an expert coding interview assistant. Provide a clear, optimal solution with detailed explanations for this problem:\n\n${promptText}`
+                  text: `You are an expert coding interview assistant specializing in algorithm optimization and correctness. Your goal is to provide solutions that are not just efficient but THOROUGHLY TESTED and verified to work against all test cases.
+
+${promptText}`
                 }
               ]
             }
@@ -1016,29 +1034,40 @@ Your solution should be efficient, well-commented, and handle edge cases.
             error: "OpenAI API key not configured. Please check your settings."
           };
         }
-        
-        const messages = [
+          const messages = [
           {
             role: "system" as const, 
-            content: `You are a coding interview assistant helping debug and improve solutions. Analyze these screenshots which include either error messages, incorrect outputs, or test cases, and provide detailed debugging help.
+            content: `You are a senior coding interview expert specializing in debugging and optimizing algorithms. You are reviewing code to ensure it is CORRECT, OPTIMAL, and PASSES ALL TEST CASES.
 
-Your response MUST follow this exact structure with these section headers (use ### for headers):
+Your primary goal is to identify and FIX issues, ensuring the solution passes ALL test cases. This requires:
+1. Carefully analyzing the exact test cases shown in the screenshots
+2. Ensuring the corrected code matches the EXACT function signature required
+3. Verifying all edge cases are properly handled
+
+YOUR RESPONSE MUST FOLLOW THIS EXACT STRUCTURE WITH THESE SECTION HEADERS:
 ### Issues Identified
-- List each issue as a bullet point with clear explanation
+- Provide a methodical analysis of each issue, referencing specific lines or test cases
+- Include logical errors, edge case handling issues, and syntax problems
 
-### Specific Improvements and Corrections
-- List specific code changes needed as bullet points
+### Corrected Solution
+- Provide the COMPLETE, corrected solution, not just snippets
+- Ensure it is properly indented and formatted
+- Include comprehensive inline comments explaining key parts
 
-### Optimizations
-- List any performance optimizations if applicable
+### Test Case Verification
+- Show step-by-step execution traces through each test case
+- Verify expected vs actual outputs for each case
+- Demonstrate edge cases are handled correctly
 
-### Explanation of Changes Needed
-Here provide a clear explanation of why the changes are needed
+### Optimization Analysis
+- Analyze time complexity with precise reasoning
+- Analyze space complexity with precise reasoning
+- Identify any potential further optimizations
 
-### Key Points
-- Summary bullet points of the most important takeaways
+### Key Insights
+- Summarize the most critical lessons from debugging this problem
 
-If you include code examples, use proper markdown code blocks with language specification (e.g. \`\`\`java).`
+If you include code examples, use proper markdown code blocks with language specification (e.g. \`\`\`python).`
           },
           {
             role: "user" as const,
@@ -1082,24 +1111,35 @@ If you include code examples, use proper markdown code blocks with language spec
           };
         }
         
-        try {
-          const debugPrompt = `
-You are a coding interview assistant helping debug and improve solutions. Analyze these screenshots which include either error messages, incorrect outputs, or test cases, and provide detailed debugging help.
+        try {          const debugPrompt = `
+You are a senior coding interview expert specializing in debugging and optimizing algorithms. You are reviewing code to ensure it is CORRECT, OPTIMAL, and PASSES ALL TEST CASES.
 
-I'm solving this coding problem: "${problemInfo.problem_statement}" in ${language}. I need help with debugging or improving my solution.
+I'm solving this coding problem: "${problemInfo.problem_statement}" in ${language}. The screenshots include my code, error messages, test cases, or execution results.
+
+IMPORTANT: Your primary goal is to identify and FIX issues, ensuring the solution passes ALL test cases. This requires:
+1. Carefully analyzing the exact test cases shown in the screenshots
+2. Ensuring the corrected code matches the EXACT function signature required
+3. Verifying all edge cases are properly handled
 
 YOUR RESPONSE MUST FOLLOW THIS EXACT STRUCTURE WITH THESE SECTION HEADERS:
 ### Issues Identified
-- List each issue as a bullet point with clear explanation
+- Provide a methodical analysis of each issue, referencing specific lines or test cases
+- Include logical errors, edge case handling issues, and syntax problems
 
-### Specific Improvements and Corrections
-- List specific code changes needed as bullet points
+### Corrected Solution
+- Provide the COMPLETE, corrected solution, not just snippets
+- Ensure it is properly indented and formatted
+- Include comprehensive inline comments explaining key parts
 
-### Optimizations
-- List any performance optimizations if applicable
+### Test Case Verification
+- Show step-by-step execution traces through each test case
+- Verify expected vs actual outputs for each case
+- Demonstrate edge cases are handled correctly
 
-### Explanation of Changes Needed
-Here provide a clear explanation of why the changes are needed
+### Optimization Analysis
+- Analyze time complexity with precise reasoning
+- Analyze space complexity with precise reasoning
+- Identify any potential further optimizations
 
 ### Key Points
 - Summary bullet points of the most important takeaways
@@ -1163,29 +1203,40 @@ If you include code examples, use proper markdown code blocks with language spec
           };
         }
         
-        try {
-          const debugPrompt = `
-You are a coding interview assistant helping debug and improve solutions. Analyze these screenshots which include either error messages, incorrect outputs, or test cases, and provide detailed debugging help.
+        try {        const debugPrompt = `
+You are a senior coding interview expert specializing in debugging and optimizing algorithms. You are reviewing code to ensure it is CORRECT, OPTIMAL, and PASSES ALL TEST CASES.
 
-I'm solving this coding problem: "${problemInfo.problem_statement}" in ${language}. I need help with debugging or improving my solution.
+I'm solving this coding problem: "${problemInfo.problem_statement}" in ${language}. The screenshots include my code, error messages, test cases, or execution results.
+
+IMPORTANT: Your primary goal is to identify and FIX issues, ensuring the solution passes ALL test cases. This requires:
+1. Carefully analyzing the exact test cases shown in the screenshots
+2. Ensuring the corrected code matches the EXACT function signature required
+3. Verifying all edge cases are properly handled
 
 YOUR RESPONSE MUST FOLLOW THIS EXACT STRUCTURE WITH THESE SECTION HEADERS:
 ### Issues Identified
-- List each issue as a bullet point with clear explanation
+- Provide a methodical analysis of each issue, referencing specific lines or test cases
+- Include logical errors, edge case handling issues, and syntax problems
 
-### Specific Improvements and Corrections
-- List specific code changes needed as bullet points
+### Corrected Solution
+- Provide the COMPLETE, corrected solution, not just snippets
+- Ensure it is properly indented and formatted
+- Include comprehensive inline comments explaining key parts
 
-### Optimizations
-- List any performance optimizations if applicable
+### Test Case Verification
+- Show step-by-step execution traces through each test case
+- Verify expected vs actual outputs for each case
+- Demonstrate edge cases are handled correctly
 
-### Explanation of Changes Needed
-Here provide a clear explanation of why the changes are needed
+### Optimization Analysis
+- Analyze time complexity with precise reasoning
+- Analyze space complexity with precise reasoning
+- Identify any potential further optimizations
 
-### Key Points
-- Summary bullet points of the most important takeaways
+### Key Insights
+- Summarize the most critical lessons from debugging this problem
 
-If you include code examples, use proper markdown code blocks with language specification.
+If you include code examples, use proper markdown code blocks with language specification (e.g. \`\`\`python).
 `;
 
           const messages = [
