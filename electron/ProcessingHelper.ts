@@ -496,7 +496,7 @@ export class ProcessingHelper {
         const extractionOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
           model: config.extractionModel || "gpt-4.1",
           messages: messages,
-          max_completion_tokens: 4000,
+          max_completion_tokens: 10000,
           // Only set temperature if the model is NOT known to restrict it
         };
 
@@ -805,7 +805,7 @@ Your solution should be efficient, well-commented, and handle ALL edge cases.
             { role: "system", content: "You are an expert coding interview assistant. Provide clear, optimal solutions with detailed explanations." },
             { role: "user", content: promptText }
           ],
-          max_completion_tokens: 4000,
+          max_completion_tokens: 10000,
           // Only set temperature if the model is NOT known to restrict it
         };
 
@@ -1115,7 +1115,7 @@ If you include code examples, use proper markdown code blocks with language spec
         const debugResponse = await this.openaiClient.chat.completions.create({
           model: config.debuggingModel || "gpt-4.1",
           messages: messages,
-          max_completion_tokens: 4000,
+          max_completion_tokens: 10000,
           temperature: 0.2
         });
         
