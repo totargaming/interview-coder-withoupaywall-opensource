@@ -492,13 +492,22 @@ export class ProcessingHelper {
           }
         ];
 
-        // Send to OpenAI Vision API
-        const extractionResponse = await this.openaiClient.chat.completions.create({
+        // Prepare options for OpenAI API call
+        const extractionOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
           model: config.extractionModel || "gpt-4.1",
           messages: messages,
-          max_tokens: 4000,
-          temperature: 0.2
-        });
+          max_completion_tokens: 4000,
+          // Only set temperature if the model is NOT known to restrict it
+        };
+
+        // Add temperature conditionally (assuming 'o4-mini' is the restricted model)
+        // You might need to expand this list if other models have similar restrictions
+        if (!config.extractionModel?.includes('o4-mini')) {
+          extractionOptions.temperature = 0.2;
+        }
+
+        // Send to OpenAI Vision API
+        const extractionResponse = await this.openaiClient.chat.completions.create(extractionOptions);
 
         // Parse the response
         try {
@@ -781,7 +790,7 @@ Your solution should be efficient, well-commented, and handle ALL edge cases.
       let responseContent;
       
       if (config.apiProvider === "openai") {
-        // OpenAI processing
+        // Verify OpenAI client
         if (!this.openaiClient) {
           return {
             success: false,
@@ -789,16 +798,24 @@ Your solution should be efficient, well-commented, and handle ALL edge cases.
           };
         }
         
-        // Send to OpenAI API
-        const solutionResponse = await this.openaiClient.chat.completions.create({
+        // Prepare options for OpenAI API call
+        const solutionOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
           model: config.solutionModel || "gpt-4.1",
           messages: [
             { role: "system", content: "You are an expert coding interview assistant. Provide clear, optimal solutions with detailed explanations." },
             { role: "user", content: promptText }
           ],
-          max_tokens: 4000,
-          temperature: 0.2
-        });
+          max_completion_tokens: 4000,
+          // Only set temperature if the model is NOT known to restrict it
+        };
+
+        // Add temperature conditionally
+        if (!config.solutionModel?.includes('o4-mini')) {
+          solutionOptions.temperature = 0.2;
+        }
+
+        // Send to OpenAI API
+        const solutionResponse = await this.openaiClient.chat.completions.create(solutionOptions);
 
         responseContent = solutionResponse.choices[0].message.content;
       } else if (config.apiProvider === "gemini")  {
@@ -1098,7 +1115,7 @@ If you include code examples, use proper markdown code blocks with language spec
         const debugResponse = await this.openaiClient.chat.completions.create({
           model: config.debuggingModel || "gpt-4.1",
           messages: messages,
-          max_tokens: 4000,
+          max_completion_tokens: 4000,
           temperature: 0.2
         });
         
